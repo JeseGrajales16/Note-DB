@@ -39,7 +39,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(max_length=150, verbose_name="Nombres")
     last_name = models.CharField(max_length=150, verbose_name="Apellidos")
     telefono = models.CharField(max_length=100,  verbose_name="Número de Teléfono")
-    tipo_usuario = models.CharField(max_length=15, choices=TIPO_USUARIO_CHOICES, verbose_name="Tipo de usuario")
+    rol = models.CharField(max_length=15, choices=TIPO_USUARIO_CHOICES, verbose_name="Tipo de usuario")
+    documento =models.CharField(max_length=30,verbose_name="Documento de identidad")
 
     is_staff = models.BooleanField(default=False, verbose_name="Es administrador")
     is_active = models.BooleanField(default=True, verbose_name="Está activo")
@@ -61,42 +62,54 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class Profesor(models.Model):
     usuario = models.OneToOneField(User, verbose_name="USuario",  max_length=100 )
+    profesor = models.ForeignKey( verbose_name="Profesor", max_length= 150)
+    curso = models.ForeignKey( verbose_name="Curso", max_length= 150)
 
     def __str__(self):
         return self.usuario.first_name
 
 
+
 class Curso(models.Model) :   
     nombre_curso=models.CharField(verbose_name='Nombre curso', max_length=150, )
-    profesor = models.ForeignKey(Profesor, verbose_name="profesor", max_length=100)
+    curso = models.CharField(verbose_name="Curso", max_length= 150,)
 
     def __str__(self):
         return self.nombre_curso
 
 class Estudiante(models.Model):
-    
+    estudiante = models.CharField(verbose_name="Estudiante", max_length=150,)
     usuario = models.OneToOneField(User, verbose_name="USuario",  max_length=100 )
-    acudiente = models.CharField( verbose_name='Acudiente', max_length=150, )
-    curso = models.PositiveSmallIntegerField( verbose_name='Curso', )
+    acudiente = models.ForeignKey( verbose_name='Acudiente', max_length=150, )
+    curso = models.ForeignKey( verbose_name='Curso', )
     def __str__(self):
         return self.usuario.first_name
 
 
 class Materia(models.Model):
+    materia =models.CharField(verbose_name="Materia",max_length=100,)
     nombre = models.CharField( verbose_name="Nombre", max_length=100, )
-    curso = models.CharField( verbose_name="Curso", max_length=10)
-    profesor = models.CharField(verbose_name="Profesor", max_length=100,)
+    curso = models.ForeignKey( verbose_name="Curso", max_length=30,)
+    profesor = models.ForeignKey(verbose_name="Profesor", max_length=100,)
       
 class Horario(models.Model):
-    materia = models.ForeignKey(
-        Materia,verbose_name="Materia", max_length=150,)
-    dia_semana = models.CharField(verbose_name="Dia y Semana", max_length=150,)
-    hora_inicio = models.CharField(verbose_name="Hora de inicio", max_length=100,)
-    hora_fin = models.CharField(verbose_name="Hora final", max_length=100,)
+    horario =models.CharField(verbose_name="Horario",max_length=100,)
+    materia = models.ForeignKey(verbose_name="Materia", max_length=150,)
+    dia_semana = models.DateField(verbose_name="Dia y Semana", max_length=150,)
+    hora_inicio = models.DateTimeField(verbose_name="Hora de inicio", max_length=100,)
+    hora_fin = models.DateTimeField(verbose_name="Hora final", max_length=100,)
 
 class Asistencia(models.Model):
-    estudiante = models.CharField(verbose_name= "Estudiante", max_length=150,)
-    curso = models.CharField(verbose_name = "Curso", max_length=100,)
-    profesor = models.CharField(verbose_name="Profesor", max_length=150,)
-    materia = models.CharField(verbose_name="Materia")
+    asistencia =models.CharField(verbose_name="Asistencia",max_length=150,)
+    estudiante = models.ForeignKey(verbose_name= "Estudiante", max_length=150,)
+    curso = models.ForeignKey(verbose_name = "Curso", max_length=100,)
+    profesor = models.ForeignKey(verbose_name="Profesor", max_length=150,)
+    materia = models.ForeignKey(verbose_name="Materia")
     estado = models.CharField(verbose_name="Estado", max_length=150,)
+    horario = models.ForeignKey(verbose_name="Horario", max_length=100,)
+    observaciones =models.CharField(verbose_name="Observaciones", max_length=250,)
+
+class Acudiente(models.Model):
+    usuario = models.OneToOneField(User, verbose_name="USuario",  max_length=100 )
+    def __str__(self):
+        return self.usuario.first_name

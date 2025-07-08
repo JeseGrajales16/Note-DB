@@ -62,7 +62,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
 class Profesor(models.Model):
     usuario = models.OneToOneField(User, verbose_name="USuario",  max_length=100 )
-    profesor = models.ForeignKey( verbose_name="Profesor", max_length= 150)
     curso = models.ForeignKey( verbose_name="Curso", max_length= 150)
 
     def __str__(self):
@@ -72,13 +71,11 @@ class Profesor(models.Model):
 
 class Curso(models.Model) :   
     nombre_curso=models.CharField(verbose_name='Nombre curso', max_length=150, )
-    curso = models.CharField(verbose_name="Curso", max_length= 150,)
 
     def __str__(self):
         return self.nombre_curso
 
 class Estudiante(models.Model):
-    estudiante = models.CharField(verbose_name="Estudiante", max_length=150,)
     usuario = models.OneToOneField(User, verbose_name="USuario",  max_length=100 )
     acudiente = models.ForeignKey( verbose_name='Acudiente', max_length=150, )
     curso = models.ForeignKey( verbose_name='Curso', )
@@ -87,20 +84,17 @@ class Estudiante(models.Model):
 
 
 class Materia(models.Model):
-    materia =models.CharField(verbose_name="Materia",max_length=100,)
     nombre = models.CharField( verbose_name="Nombre", max_length=100, )
     curso = models.ForeignKey( verbose_name="Curso", max_length=30,)
     profesor = models.ForeignKey(verbose_name="Profesor", max_length=100,)
       
 class Horario(models.Model):
-    horario =models.CharField(verbose_name="Horario",max_length=100,)
     materia = models.ForeignKey(verbose_name="Materia", max_length=150,)
     dia_semana = models.DateField(verbose_name="Dia y Semana", max_length=150,)
     hora_inicio = models.DateTimeField(verbose_name="Hora de inicio", max_length=100,)
     hora_fin = models.DateTimeField(verbose_name="Hora final", max_length=100,)
 
 class Asistencia(models.Model):
-    asistencia =models.CharField(verbose_name="Asistencia",max_length=150,)
     estudiante = models.ForeignKey(verbose_name= "Estudiante", max_length=150,)
     curso = models.ForeignKey(verbose_name = "Curso", max_length=100,)
     profesor = models.ForeignKey(verbose_name="Profesor", max_length=150,)

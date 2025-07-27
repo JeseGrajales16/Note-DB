@@ -32,7 +32,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     TIPO_USUARIO_CHOICES = [
         ('estudiante', 'Estudiante'),
         ('profesor', 'Profesor'),
-        ('acudiente', 'Acudiente')
+        ('acudiente', 'Acudiente'),
         ('exalumno', 'Exalumno'),
     ]
 

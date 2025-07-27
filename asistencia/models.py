@@ -33,6 +33,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         ('estudiante', 'Estudiante'),
         ('profesor', 'Profesor'),
         ('acudiente', 'Acudiente')
+        ('exalumno', 'Exalumno'),
     ]
 
     email = models.EmailField(unique=True, verbose_name="Correo electrónico")
@@ -86,6 +87,15 @@ class Estudiante(models.Model):
     usuario = models.OneToOneField(User, on_delete=models.CASCADE)
     acudiente = models.ForeignKey(Acudiente, on_delete=models.SET_NULL, null=True, blank=True)
     curso = models.ForeignKey(Curso, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.usuario.get_full_name()
+    
+
+class Exalumno(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    año_promoción = models.CharField(max_length=4)
+    especialidad_tecnica = models.CharField(max_length=50)
 
     def __str__(self):
         return self.usuario.get_full_name()

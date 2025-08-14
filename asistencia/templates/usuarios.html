@@ -1,0 +1,26 @@
+<h1>Lista de Usuarios</h1>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Email</th>
+            <th>Nombre</th>
+            <th>Rol</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for usuario in usuarios %}
+        <tr>
+            <td>{{ usuario.email }}</td>
+            <td>{{ usuario.first_name }} {{ usuario.last_name }}</td>
+            <td>{{ usuario.rol }}</td>
+            <td>
+                <a href="{% url 'eliminar_usuario' usuario.pk %}">Eliminar</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'registro' %}">Registrar nuevo usuario</a>

@@ -1,7 +1,7 @@
 from django.views.generic import ListView, DeleteView, CreateView
 from django.urls import reverse_lazy
-from .models import User
-from .forms import UsuarioRegistroForm
+from .models import User, Curso, Materia
+from .forms import UsuarioRegistroForm,CursoRegistroForm,MateriaRegistroForm
 
 
 class RegistroUsuarioView(CreateView):
@@ -27,3 +27,38 @@ class EliminarUsuarioView(DeleteView):
     model = User
     template_name = "eliminar_usuario.html"
     success_url = reverse_lazy("usuarios")
+
+
+class CursoRegistroView(CreateView):
+    model = Curso
+    form_class = CursoRegistroForm
+    template_name ="curso_registro.html"
+    success_url = reverse_lazy("listar_cursos")
+
+class ListarCursosView(ListView):
+    model = Curso 
+    template_name = "listar_cursos.html"
+    context_object_name = "cursos"
+
+
+class EliminarCursoView(DeleteView):
+    model = Curso
+    template_name = "eliminar_curso.html"
+    success_url = reverse_lazy("listar_cursos")
+
+class MateriaRegistroView(CreateView): 
+    model = Materia
+    form_class = MateriaRegistroForm
+    template_name = "materias_registro.html"
+    success_url = reverse_lazy("materias")
+
+class ListarMateriasView(ListView):
+    model = Materia 
+    template_name = "lista_de_materias.html"
+    context_object_name = "materias"
+
+
+class EliminarMateriasView(DeleteView):
+    model = Materia
+    template_name = "eliminar_materias.html"
+    success_url = reverse_lazy("listar_materias")

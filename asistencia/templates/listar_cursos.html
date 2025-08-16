@@ -1,0 +1,22 @@
+<h1>Lista de Cursos</h1>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for curso in cursos %}
+        <tr>
+            <td>{{ curso.nombre_curso }}</td>
+            <td>
+                <a href="{% url 'eliminar_curso' curso.pk %}">Eliminar</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'registrar_curso' %}">Registrar nuevo curso</a>

@@ -1,0 +1,22 @@
+<h1>Lista de Materias</h1>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for materia in materias %}
+        <tr>
+            <td>{{ materia.nombre_materia }}</td>
+            <td>
+                <a href="{% url 'eliminar_materia' curso.pk %}">Eliminar</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'registrar_materias' %}">Registrar nueva materia</a>

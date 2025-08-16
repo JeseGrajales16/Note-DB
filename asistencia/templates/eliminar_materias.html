@@ -1,0 +1,9 @@
+<h2>¿Seguro que deseas eliminar esta materia</h2>
+
+<p><strong>{{ object.nombre_materias}}</strong> </p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirmar</button>
+    <a href="{% url 'registrar_materias' %}">Cancelar</a>
+</form>

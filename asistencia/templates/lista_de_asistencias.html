@@ -1,0 +1,22 @@
+<h1>Lista de Asistencias</h1>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Nombre</th>
+            <th>Acciones</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for asistencia in asistencias %}
+        <tr>
+            <td>{{ asistencia.nombre_asistencia }}</td>
+            <td>
+                <a href="{% url 'eliminar_asistencia' asistencia.pk %}">Eliminar</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'registrar_asistencias' %}">Registrar nueva materia</a>

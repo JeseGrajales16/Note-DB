@@ -1,5 +1,5 @@
 from django import forms
-from .models import User, Curso, Materia
+from .models import User, Curso, Materia, Asistencia
 
 class UsuarioRegistroForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
@@ -19,3 +19,9 @@ class MateriaRegistroForm(forms.ModelForm):
     class Meta:
         model = Materia
         fields = ["nombre_materias"]
+
+class AsistanciaRegistroFrom(forms.ModelForm):
+
+    class Meta:
+        model = Asistencia
+        fields = ["nombre_asistencia"]

@@ -1,0 +1,11 @@
+<h2>¿Seguro que deseas eliminar esta asistencia?</h2>
+
+<p><strong>{{ object.nombre_asistencia }}</strong> </p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit">Confirmar</button>
+    <a href="{% url 'registrar_asistencia' %}">Cancelar</a>
+</form>
+
+

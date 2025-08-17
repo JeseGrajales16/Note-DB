@@ -11,9 +11,21 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import environ
+import os
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+# Inicializar entorno
+env = environ.Env(
+    DEBUG=(bool, False)
+)
+
+# Leer el archivo .env
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 # Quick-start development settings - unsuitable for production
@@ -78,7 +90,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'note_db',
         'USER': 'postgres', 
-        'PASSWORD': '1234', 
+        'PASSWORD': env('PASSWORD'), 
         'HOST': 'localhost',
         'PORT': '5432',
     }

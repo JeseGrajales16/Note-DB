@@ -18,7 +18,7 @@ class MateriaRegistroForm(forms.ModelForm):
 
     class Meta:
         model = Materia
-        fields = ["nombre_materias"]
+        fields = ["nombre", "curso", "profesor"]
 
 class AsistanciaRegistroFrom(forms.ModelForm):
 

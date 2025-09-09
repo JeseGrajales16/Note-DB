@@ -10,13 +10,13 @@
     <tbody>
     {% for materia in materias %}
         <tr>
-            <td>{{ materia.nombre_materia }}</td>
+            <td>{{ materia.nombre }}</td>
             <td>
-                <a href="{% url 'eliminar_materia' curso.pk %}">Eliminar</a>
+                <a href="{% url 'eliminar_materia' materia.pk %}">Eliminar</a>
             </td>
         </tr>
     {% endfor %}
     </tbody>
 </table>
 
-<a href="{% url 'registrar_materias' %}">Registrar nueva materia</a>
+<a href="{% url 'registrar_materia' %}">Registrar nueva materia</a>

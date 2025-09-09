@@ -1,9 +1,9 @@
-<h2>¿Seguro que deseas eliminar esta materia?</h2>
+<h2>¿Seguro que deseas eliminar este horario?</h2>
 
 <p><strong>{{ object.nombre}}</strong> </p>
 
 <form method="post">
     {% csrf_token %}
     <button type="submit">Confirmar</button>
-    <a href="{% url 'registrar_materia' %}">Cancelar</a>
+    <a href="{% url 'registrar_horario' %}">Cancelar</a>
 </form>

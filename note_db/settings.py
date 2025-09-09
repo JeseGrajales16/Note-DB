@@ -138,3 +138,21 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'asistencia.User'
+
+
+# settings.py
+
+# Directorio base de tu proyecto
+import os
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# URL para referenciar archivos estáticos
+STATIC_URL = '/static/'
+
+# Directorio donde Django buscará los archivos estáticos de tu proyecto
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+# Directorio donde Django recopilará los archivos estáticos en producción
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')

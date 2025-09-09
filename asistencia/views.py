@@ -1,7 +1,7 @@
 from django.views.generic import ListView, DeleteView, CreateView
 from django.urls import reverse_lazy
-from .models import User, Curso, Materia, Asistencia
-from .forms import UsuarioRegistroForm,CursoRegistroForm,MateriaRegistroForm,AsistanciaRegistroFrom
+from .models import User, Curso, Materia, Asistencia, Horario
+from .forms import UsuarioRegistroForm,CursoRegistroForm,MateriaRegistroForm,AsistanciaRegistroFrom,HorarioRegistroForm
 
 
 class RegistroUsuarioView(CreateView):
@@ -35,6 +35,7 @@ class CursoRegistroView(CreateView):
     template_name ="curso_registro.html"
     success_url = reverse_lazy("listar_cursos")
 
+
 class ListarCursosView(ListView):
     model = Curso 
     template_name = "listar_cursos.html"
@@ -46,11 +47,13 @@ class EliminarCursoView(DeleteView):
     template_name = "eliminar_curso.html"
     success_url = reverse_lazy("listar_cursos")
 
+
 class MateriaRegistroView(CreateView): 
     model = Materia
     form_class = MateriaRegistroForm
     template_name = "materias_registro.html"
-    success_url = reverse_lazy("materias")
+    success_url = reverse_lazy("listar_materias")
+
 
 class ListarMateriasView(ListView):
     model = Materia 
@@ -63,12 +66,38 @@ class EliminarMateriasView(DeleteView):
     template_name = "eliminar_materias.html"
     success_url = reverse_lazy("listar_materias")
 
+
 class AsistenciaRegistroView(CreateView):
     model = Asistencia
-    from_class = AsistanciaRegistroFrom
+    form_class = AsistanciaRegistroFrom
     template_name = "asistencias_registro.html"
     success_url = reverse_lazy("asistencias")
+
+
 class ListarAsistenciasView(ListView):
     model = Asistencia 
     template_name = "lista_de_asistencias.html"
-    context_object_name = "Asistencias"
+    context_object_name = "asistencias"
+
+
+class HorarioRegistroView(CreateView):
+    model = Horario
+    form_class = HorarioRegistroForm
+    template_name = "registro_horario.html"
+    success_url = reverse_lazy("lista_de_horarios")
+
+
+class ListasHorarioView(ListView):
+    model = Horario
+    template_name = "lista_horarios.html"
+    context_object_name = "horarios"
+
+
+class EliminarHorarioView(DeleteView):
+    model = Horario
+    template_name = "eliminar_horario.html"
+    success_url = reverse_lazy("lista_de_horarios")
+
+    
+
+    

@@ -1,7 +1,11 @@
-from django.views.generic import ListView, DeleteView, CreateView
+from django.views.generic import ListView, DeleteView, CreateView, TemplateView
 from django.urls import reverse_lazy
 from .models import User, Curso, Materia, Asistencia, Horario
 from .forms import UsuarioRegistroForm,CursoRegistroForm,MateriaRegistroForm,AsistanciaRegistroFrom,HorarioRegistroForm
+
+class HomeView(TemplateView):
+    template_name= "home.html"
+    success_url= reverse_lazy("home")
 
 
 class RegistroUsuarioView(CreateView):

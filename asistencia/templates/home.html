@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Inicio - Asistencia{% endblock %}
+
+{% block content %}
+
+<!-- Carrusel -->
+<div id="carouselExample" class="carousel slide mt-0" data-bs-ride="carousel">
+  <div class="carousel-inner">
+    <div class="carousel-item active">
+      <img src="{% static 'imagenes/carrusel1.jpg' %}" class="d-block w-100" alt="Primera imagen">
+    </div>
+    <div class="carousel-item">
+      <img src="{% static 'imagenes/carrusel.jpg' %}" class="d-block w-100" alt="Segunda imagen">
+    </div>
+    <div class="carousel-item">
+      <img src="{% static 'imagenes/carrusel3.jpg' %}" class="d-block w-100" alt="Tercera imagen">
+    </div>
+  </div>
+  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
+    <span class="carousel-control-prev-icon"></span>
+  </button>
+  <button class="carousel-control-next" type="button" data-bs-target="#carouselExample" data-bs-slide="next">
+    <span class="carousel-control-next-icon"></span>
+  </button>
+</div>
+
+<!-- Acerca de Nosotros y Visión -->
+<section class="container my-5">
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100" style="background-color:#f8f9fa;">
+        <div class="card-body">
+          <h2 class="card-title text-center mb-3">Acerca de Nosotros</h2>
+          <p class="card-text text-center">
+            Somos una Institución Educativa con más de 20 años de experiencia, comprometidos con la formación integral de nuestros estudiantes. Nuestra misión es brindar una educación de calidad que fomente el pensamiento crítico y los valores humanos.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm h-100" style="background-color:#f8f9fa;">
+        <div class="card-body">
+          <h2 class="card-title text-center mb-3">Visión</h2>
+          <p class="card-text text-center">
+            Para el año 2027 la Institución Educativa Técnica San Luis se posicionará como líder en la prestación del servicio educativo, con procesos de alta calidad, fundamentados en modelos pedagógicos y didácticos, coherentes con las necesidades sociales ambientales, que promuevan la formación de ciudadanos íntegros, críticos, autónomos y comprometidos con un desarrollo humano sostenible. Nuestro Lema: Verdad, Virtud y Ciencia.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Información de Sedes y Especialidades -->
+<section class="container my-5">
+  <h2 class="text-center mb-4">Nuestras Sedes y Especialidades Técnicas</h2>
+  
+  <div class="row align-items-center mb-5">
+    <div class="col-md-6">
+      <img src="{% static 'imagenes/sedeprincipal.jpg' %}" class="img-fluid rounded shadow" alt="Sede Principal">
+    </div>
+    <div class="col-md-6">
+      <h3>Sede Principal</h3>
+      <p>La sede principal cuenta con amplias instalaciones...</p>
+    </div>
+  </div>
+  
+  <div class="row align-items-center mb-5">
+    <div class="col-md-6 order-md-2">
+      <img src="{% static 'imagenes/S10.jpg' %}" class="img-fluid rounded shadow" alt="Especialidad Técnica 1">
+    </div>
+    <div class="col-md-6 order-md-1">
+      <h3>Especialidad en Sistemas</h3>
+      <p>Formamos técnicos en mantenimiento y desarrollo de software...</p>
+    </div>
+  </div>
+
+  <div class="row align-items-center">
+    <div class="col-md-6">
+      <img src="{% static 'imagenes/S1.jpg' %}" class="img-fluid rounded shadow" alt="Especialidad Técnica 2">
+    </div>
+    <div class="col-md-6">
+      <h3>Especialidad en Agropecuaria</h3>
+      <p>Desarrollamos competencias en el área agrícola y pecuaria...</p>
+    </div>
+  </div>
+</section>
+
+<!-- Galería de Fotos -->
+<section class="container my-5">
+  <h2 class="text-center mb-4">Galería de Fotos</h2>
+  <div class="d-flex overflow-auto gap-3">
+    <img src="{% static 'imagenes/S3.jpg' %}" class="img-thumbnail galeria-img" alt="Galería 1">
+    <img src="{% static 'imagenes/S2.jpg' %}" class="img-thumbnail galeria-img" alt="Galería 2">
+    <img src="{% static 'imagenes/S4.jpg' %}" class="img-thumbnail galeria-img" alt="Galería 3">
+    <img src="{% static 'imagenes/S5.jpg' %}" class="img-thumbnail galeria-img" alt="Galería 4">
+  </div>
+</section>
+
+<!-- Contacto -->
+<section class="container my-5">
+  <h2 class="text-center mb-4">Contacto</h2>
+  <p class="text-center">📍 Dirección: Calle 123 #45-67, San Luis</p>
+  <p class="text-center">📞 Teléfono: (123) 456 7890</p>
+  <p class="text-center">📧 Email: contacto@sanluis.edu.co</p>
+</section>
+
+<!-- Modal para ampliar imágenes de galería -->
+<div class="modal fade" id="galeriaModal" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <img id="galeriaModalImg" class="img-fluid rounded" alt="Imagen ampliada">
+  </div>
+</div>
+
+<script>
+  // Script para ampliar imagen de galería
+  document.querySelectorAll('.galeria-img').forEach(img => {
+    img.addEventListener('click', () => {
+      document.getElementById('galeriaModalImg').src = img.src;
+      new bootstrap.Modal(document.getElementById('galeriaModal')).show();
+    });
+  });
+</script>
+
+{% endblock %}

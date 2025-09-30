@@ -1,11 +1,9 @@
 {% extends "base.html" %}
-{% load static %}
 
 {% block content %}
 <div class="container mt-5">
   <div class="row justify-content-center">
-    <div class="col-md-6">
-
+    <div class="col-md-8">
       <div class="card shadow">
         <div class="card-header bg-secondary text-white text-center">
           <h4>Registro de Usuario</h4>
@@ -14,15 +12,27 @@
           <form method="post">
             {% csrf_token %}
 
-            {% for field in form %}
-              <div class="mb-3">
-                <label class="form-label">{{ field.label }}</label>
-                {{ field }}
-                {% if field.errors %}
-                  <div class="text-danger small">{{ field.errors }}</div>
-                {% endif %}
-              </div>
-            {% endfor %}
+            <div class="row">
+              <div class="col-md-6 mb-3">{{ form.first_name.label_tag }} {{ form.first_name }}</div>
+              <div class="col-md-6 mb-3">{{ form.last_name.label_tag }} {{ form.last_name }}</div>
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">{{ form.documento.label_tag }} {{ form.documento }}</div>
+              <div class="col-md-6 mb-3">{{ form.telefono.label_tag }} {{ form.telefono }}</div>
+            </div>
+            <div class="mb-3">{{ form.email.label_tag }} {{ form.email }}</div>
+            <div class="mb-3">{{ form.password.label_tag }} {{ form.password }}</div>
+            <div class="mb-3">{{ form.rol.label_tag }} {{ form.rol }}</div>
+            
+            <div id="campos_estudiante" style="display: none;">
+              <div class="mb-3">{{ form.curso.label_tag }} {{ form.curso }}</div>
+              <div class="mb-3">{{ form.acudiente.label_tag }} {{ form.acudiente }}</div>
+            </div>
+
+            <div id="campos_exalumno" style="display: none;">
+              <div class="mb-3">{{ form.año_promoción.label_tag }} {{ form.año_promoción }}</div>
+              <div class="mb-3">{{ form.especialidad_tecnica.label_tag }} {{ form.especialidad_tecnica }}</div>
+            </div>
 
             <div class="d-grid">
               <button type="submit" class="btn btn-success">Registrar</button>
@@ -30,8 +40,36 @@
           </form>
         </div>
       </div>
-
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const rolSelect = document.getElementById('id_rol');
+    const camposEstudiante = document.getElementById('campos_estudiante');
+    const camposExalumno = document.getElementById('campos_exalumno');
+
+    function toggleFields() {
+      const selectedRol = rolSelect.value;
+      
+      // Ocultamos todos los campos condicionales primero
+      camposEstudiante.style.display = 'none';
+      camposExalumno.style.display = 'none';
+
+      // Mostramos los campos según el rol seleccionado
+      if (selectedRol === 'estudiante') {
+        camposEstudiante.style.display = 'block';
+      } else if (selectedRol === 'exalumno') {
+        camposExalumno.style.display = 'block';
+      }
+    }
+
+    // Ejecutamos la función cuando cambia la selección
+    rolSelect.addEventListener('change', toggleFields);
+    
+    // Y también la ejecutamos al cargar la página por si hay un valor pre-seleccionado
+    toggleFields();
+  });
+</script>
 {% endblock %}

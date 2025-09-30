@@ -1,9 +1,0 @@
-<h2>¿Seguro que deseas eliminar este curso?</h2>
-
-<p><strong>{{ object.nombre_curso }}</strong> </p>
-
-<form method="post">
-    {% csrf_token %}
-    <button type="submit">Confirmar</button>
-    <a href="{% url 'registrar_curso' %}">Cancelar</a>
-</form>

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-success text-white">
+      <h3 class="mb-0">Mi Horario Docente</h3>
+      <h5 class="mb-0">Profesor: {{ user.get_full_name }}</h5>
+    </div>
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <a href="?fecha={{ semana_anterior|date:'Y-m-d' }}" class="btn btn-outline-secondary">‹‹ Anterior</a>
+        <div class="text-center">
+            <h5 class="mb-0">{{ semana_actual_str }}</h5>
+            <a href="{% url 'horario_profesor' %}" class="btn btn-link btn-sm p-0">Volver a la semana actual</a>
+        </div>
+        <a href="?fecha={{ semana_siguiente|date:'Y-m-d' }}" class="btn btn-outline-secondary">Siguiente ››</a>
+      </div>
+
+      {% if horario_semanal %}
+        <div class="row">
+          {% for fecha, clases_del_dia in horario_semanal.items %}
+            <div class="col-lg mb-3">
+              <div class="card h-100">
+                <div class="card-header text-center bg-light">
+                  <strong>{{ fecha|date:"l" }}</strong><br>
+                  <small>{{ fecha|date:"d/m" }}</small>
+                </div>
+                <ul class="list-group list-group-flush">
+                  {% for clase in clases_del_dia %}
+                    <a href="{% url 'tomar_asistencia' clase.horario.pk fecha|date:'Y-m-d' %}" 
+                       class="list-group-item list-group-item-action {% if clase.asistencia_tomada %}bg-success-subtle{% endif %}">
+                      
+                      <div class="fw-bold">{{ clase.horario.hora_inicio|time:"h:i A" }} - {{ clase.horario.hora_fin|time:"h:i A" }}</div>
+                      <div>{{ clase.horario.materia.nombre }}</div>
+                      <div class="small text-muted">Curso: {{ clase.horario.materia.curso.nombre_curso }}</div>
+                    </a>
+                  {% empty %}
+                    <li class="list-group-item text-center text-muted">No hay clases programadas.</li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="alert alert-info">Aún no tienes un horario asignado.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

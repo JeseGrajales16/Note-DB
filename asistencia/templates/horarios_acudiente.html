@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+
+  {% for data in datos_horarios %}
+    <div class="card shadow mb-4">
+      <div class="card-header bg-info text-white">
+        <h3 class="mb-0">Horario de: {{ data.estudiante.usuario.get_full_name }}</h3>
+        <h5 class="mb-0">Curso: {{ data.estudiante.curso.nombre_curso }}</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <a href="?fecha={{ data.semana_anterior|date:'Y-m-d' }}" class="btn btn-outline-secondary">‹‹ Anterior</a>
+          <h5 class="mb-0">{{ data.semana_actual_str }}</h5>
+          <a href="?fecha={{ data.semana_siguiente|date:'Y-m-d' }}" class="btn btn-outline-secondary">Siguiente ››</a>
+        </div>
+
+        {% if data.horario_semanal %}
+          <div class="row">
+            {% for fecha, clases_del_dia in data.horario_semanal.items %}
+              <div class="col-lg mb-3">
+                <div class="card h-100">
+                  <div class="card-header text-center bg-light">
+                    <strong>{{ fecha|date:"l" }}</strong><br>
+                    <small>{{ fecha|date:"d/m" }}</small>
+                  </div>
+                  <ul class="list-group list-group-flush">
+                    {% for clase in clases_del_dia %}
+                      <li class="list-group-item 
+                          {% if clase.estado == 'presente' %}bg-success-subtle{% endif %}
+                          {% if clase.estado == 'ausente' %}bg-danger-subtle{% endif %}
+                          {% if clase.estado == 'tarde' %}bg-warning-subtle{% endif %}
+                          {% if clase.estado == 'excusa' %}bg-info-subtle{% endif %}
+                      ">
+                        <div class="fw-bold">{{ clase.horario.hora_inicio|time:"h:i A" }}</div>
+                        <div>{{ clase.horario.materia.nombre }}</div>
+                        <div class="small text-muted">{{ clase.horario.materia.profesor.usuario.get_full_name }}</div>
+                      </li>
+                    {% empty %}
+                      <li class="list-group-item text-center text-muted">No hay clases.</li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  {% empty %}
+    <div class="alert alert-info">
+      No tienes estudiantes asociados para ver horarios.
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

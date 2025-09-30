@@ -1,26 +1,224 @@
-<h1>Lista de Usuarios</h1>
+{% extends "base.html" %}
 
-<table border="1">
-    <thead>
-        <tr>
-            <th>Email</th>
-            <th>Nombre</th>
-            <th>Rol</th>
-            <th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-    {% for usuario in usuarios %}
-        <tr>
-            <td>{{ usuario.email }}</td>
-            <td>{{ usuario.first_name }} {{ usuario.last_name }}</td>
-            <td>{{ usuario.rol }}</td>
-            <td>
-                <a href="{% url 'eliminar_usuario' usuario.pk %}">Eliminar</a>
+{% block content %}
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">Lista de Usuarios</h4>
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalRegistroUsuario">
+        + Añadir Usuario
+      </button>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead class="table-dark">
+            <tr>
+              <th>Nombre Completo</th>
+              <th>Email</th>
+              <th>Rol</th>
+              <th class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="tabla-usuarios-body">
+            {% for usuario in usuarios %}
+            <tr id="usuario-{{ usuario.pk }}">
+              <td>{{ usuario.get_full_name }}</td>
+              <td>{{ usuario.email }}</td>
+              <td>{{ usuario.get_rol_display }}</td>
+              <td class="text-end">
+                <button class="btn btn-danger btn-sm btn-eliminar" data-bs-toggle="modal" data-bs-target="#modalConfirmarEliminacion" data-url="{% url 'eliminar_usuario' usuario.pk %}">
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+            {% empty %}
+            <tr id="no-usuarios-row">
+              <td colspan="4" class="text-center">No hay usuarios registrados.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalRegistroUsuario" tabindex="-1">
+  <div class="modal-dialog modal-lg"> <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Registrar Nuevo Usuario</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form id="form-registro-usuario" action="{% url 'registro' %}" method="post">
+          {% csrf_token %}
+          <div class="row">
+            <div class="col-md-6 mb-3">{{ registro_form.first_name.label_tag }} {{ registro_form.first_name }}</div>
+            <div class="col-md-6 mb-3">{{ registro_form.last_name.label_tag }} {{ registro_form.last_name }}</div>
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">{{ registro_form.documento.label_tag }} {{ registro_form.documento }}</div>
+            <div class="col-md-6 mb-3">{{ registro_form.telefono.label_tag }} {{ registro_form.telefono }}</div>
+          </div>
+          <div class="mb-3">{{ registro_form.email.label_tag }} {{ registro_form.email }}</div>
+          <div class="mb-3">{{ registro_form.password.label_tag }} {{ registro_form.password }}</div>
+          <div class="mb-3">{{ registro_form.rol.label_tag }} {{ registro_form.rol }}</div>
+          
+          <div id="campos_estudiante" style="display: none;">
+            <div class="mb-3">{{ registro_form.curso.label_tag }} {{ registro_form.curso }}</div>
+            <div class="mb-3">{{ registro_form.acudiente.label_tag }} {{ registro_form.acudiente }}</div>
+          </div>
+          <div id="campos_exalumno" style="display: none;">
+            <div class="mb-3">{{ registro_form.año_promoción.label_tag }} {{ registro_form.año_promoción }}</div>
+            <div class="mb-3">{{ registro_form.especialidad_tecnica.label_tag }} {{ registro_form.especialidad_tecnica }}</div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="submit" form="form-registro-usuario" class="btn btn-primary">Guardar Usuario</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="modalConfirmarEliminacion" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar Eliminación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro de que quieres eliminar este usuario?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="btn-confirmar-eliminar">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+  const tablaUsuariosBody = document.getElementById('tabla-usuarios-body');
+  
+  // --- LÓGICA INTERNA DEL FORMULARIO DINÁMICO ---
+  const modalNode = document.getElementById('modalRegistroUsuario');
+  const rolSelect = modalNode.querySelector('#id_rol');
+  const camposEstudiante = modalNode.querySelector('#campos_estudiante');
+  const camposExalumno = modalNode.querySelector('#campos_exalumno');
+
+  function toggleFields() {
+    const selectedRol = rolSelect.value;
+    camposEstudiante.style.display = 'none';
+    camposExalumno.style.display = 'none';
+    if (selectedRol === 'estudiante') {
+      camposEstudiante.style.display = 'block';
+    } else if (selectedRol === 'exalumno') {
+      camposExalumno.style.display = 'block';
+    }
+  }
+  rolSelect.addEventListener('change', toggleFields);
+  toggleFields(); // Llamada inicial
+
+    // --- LÓGICA AJAX PARA REGISTRAR USUARIO ---
+    const formRegistro = document.getElementById('form-registro-usuario');
+    const modalRegistro = new bootstrap.Modal(modalNode);
+
+    // Función para mostrar errores en el formulario
+    function mostrarErrores(errors) {
+    // Primero, limpiamos errores anteriores
+    formRegistro.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+    formRegistro.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+
+    for (const field in errors) {
+        const input = formRegistro.querySelector(`[name=${field}]`);
+        if (input) {
+        input.classList.add('is-invalid');
+        const errorContainer = document.createElement('div');
+        errorContainer.className = 'invalid-feedback';
+        errorContainer.innerText = errors[field][0];
+        input.parentNode.appendChild(errorContainer);
+        }
+    }
+    }
+
+    formRegistro.addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    fetch(formRegistro.action, {
+        method: 'POST', 
+        body: new FormData(formRegistro), 
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    })
+    .then(response => {
+        // Verificamos si la respuesta fue exitosa (código 2xx) o no
+        if (response.ok) {
+        return response.json(); // Si fue exitosa, procesamos el JSON
+        } else {
+        // Si hubo un error (ej. 400), procesamos los errores y los rechazamos
+        return response.json().then(errors => Promise.reject(errors));
+        }
+    })
+    .then(data => {
+        // Este bloque solo se ejecuta si la respuesta fue OK
+        const newRow = `
+        <tr id="usuario-${data.id}">
+            <td>${data.full_name}</td>
+            <td>${data.email}</td>
+            <td>${data.rol}</td>
+            <td class="text-end">
+            <button class="btn btn-danger btn-sm btn-eliminar" data-bs-toggle="modal" data-bs-target="#modalConfirmarEliminacion" data-url="/usuarios/eliminar/${data.id}/">
+                Eliminar
+            </button>
             </td>
         </tr>
-    {% endfor %}
-    </tbody>
-</table>
+        `;
+        const noUsuariosRow = document.getElementById('no-usuarios-row');
+        if (noUsuariosRow) noUsuariosRow.remove();
+        tablaUsuariosBody.insertAdjacentHTML('beforeend', newRow);
+        formRegistro.reset();
+        toggleFields();
+        modalRegistro.hide();
+    })
+    .catch(errors => {
+        // Este bloque se ejecuta si la promesa fue rechazada (hubo un error 400)
+        console.error('Errores de validación:', errors);
+        mostrarErrores(errors);
+    });
+    });
 
-<a href="{% url 'registro' %}">Registrar nuevo usuario</a>
+  // --- LÓGICA AJAX PARA ELIMINAR USUARIO ---
+  const modalEliminar = new bootstrap.Modal(document.getElementById('modalConfirmarEliminacion'));
+  const btnConfirmarEliminar = document.getElementById('btn-confirmar-eliminar');
+  let urlParaEliminar = '';
+  let filaParaEliminar = null;
+  
+  tablaUsuariosBody.addEventListener('click', function(e) {
+    if (e.target && e.target.classList.contains('btn-eliminar')) {
+      urlParaEliminar = e.target.dataset.url;
+      filaParaEliminar = e.target.closest('tr');
+    }
+  });
+
+  btnConfirmarEliminar.addEventListener('click', function() {
+    fetch(urlParaEliminar, { method: 'POST', headers: { 'X-CSRFToken': csrfToken, 'X-Requested-With': 'XMLHttpRequest' } })
+    .then(response => response.json())
+    .then(data => {
+      if (data.message) {
+        filaParaEliminar.remove();
+        modalEliminar.hide();
+        if (tablaUsuariosBody.children.length === 0) {
+          tablaUsuariosBody.innerHTML = `<tr id="no-usuarios-row"><td colspan="4" class="text-center">No hay usuarios registrados.</td></tr>`;
+        }
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

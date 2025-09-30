@@ -1,37 +1,222 @@
-from django.views.generic import ListView, DeleteView, CreateView, TemplateView
-from django.urls import reverse_lazy
-from .models import User, Curso, Materia, Asistencia, Horario
-from .forms import UsuarioRegistroForm,CursoRegistroForm,MateriaRegistroForm,AsistanciaRegistroFrom,HorarioRegistroForm
+# 1. Importaciones de la Librería Estándar de Python
+from datetime import date, timedelta
+# 2. Importaciones de Paquetes de Terceros (Django)
+from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.views import LoginView, LogoutView
+from django.core.mail import send_mail
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
+from django.urls import reverse, reverse_lazy
+from django.utils import timezone
+from django.views import View
+from django.views.generic import CreateView, DeleteView, ListView, TemplateView
+# 3. Importaciones de la Aplicación Local
+from .forms import (
+    CursoRegistroForm,
+    CustomLoginForm,
+    HorarioRegistroForm,
+    MateriaRegistroForm,
+    UsuarioRegistroForm,
+)
+from .models import (
+    Acudiente,
+    Asistencia,
+    Curso,
+    Estudiante,
+    Exalumno,
+    Horario,
+    Materia,
+    Profesor,
+    User,
+)
+
+
+class HorarioSemanalMixin:
+    """
+    Este Mixin calcula la semana actual y prepara el contexto con los
+    horarios y las asistencias correspondientes. VERSIÓN CORREGIDA.
+    """
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        fecha_str = self.request.GET.get('fecha')
+        if fecha_str:
+            hoy = date.fromisoformat(fecha_str)
+        else:
+            hoy = timezone.now().date()
+
+        inicio_semana = hoy - timedelta(days=hoy.weekday())
+        fin_semana = inicio_semana + timedelta(days=4)
+        
+        horarios_base = self.get_horarios_base()
+        asistencias_semana = self.get_asistencias_semana(inicio_semana, fin_semana)
+        
+        # 1. Creamos dos estructuras de datos para las asistencias:
+        # Un mapa para el estado del estudiante
+        mapa_asistencias_estudiante = {(a.horario.id, a.fecha): a.estado for a in asistencias_semana}
+        
+        # Un CONJUNTO (set) para saber si la asistencia fue tomada por el profesor.
+        # Es más eficiente para verificar si un elemento existe.
+        asistencias_tomadas_profesor = set(asistencias_semana.values_list('horario_id', 'fecha'))
+
+        DIA_MAP = {
+            'Lunes': 0, 'Martes': 1, 'Miércoles': 2, 'Jueves': 3, 'Viernes': 4
+        }
+
+        dias_semana_fechas = [(inicio_semana + timedelta(days=i)) for i in range(5)]
+        horario_semanal = {dia: [] for dia in dias_semana_fechas}
+        
+        for horario in horarios_base:
+            dia_numerico_horario = DIA_MAP.get(horario.dia_semana)
+            
+            if dia_numerico_horario is not None:
+                fecha_de_clase = inicio_semana + timedelta(days=dia_numerico_horario)
+                
+                # Buscamos en nuestras estructuras de datos
+                estado_estudiante = mapa_asistencias_estudiante.get((horario.id, fecha_de_clase))
+                asistencia_tomada = (horario.id, fecha_de_clase) in asistencias_tomadas_profesor
+                
+                # Añadimos AMBOS datos al diccionario
+                horario_semanal[fecha_de_clase].append({
+                    'horario': horario,
+                    'estado': estado_estudiante,
+                    'asistencia_tomada': asistencia_tomada,
+                })
+        
+        context['horario_semanal'] = horario_semanal
+        context['dias_semana_fechas'] = dias_semana_fechas
+        context['semana_anterior'] = inicio_semana - timedelta(days=7)
+        context['semana_siguiente'] = inicio_semana + timedelta(days=7)
+        context['semana_actual_str'] = f"{inicio_semana.strftime('%d/%m/%Y')} - {fin_semana.strftime('%d/%m/%Y')}"
+        
+        return context
+    
+
+class ProfesorRequiredMixin(UserPassesTestMixin):
+    """
+    Mixin para verificar que el usuario logueado es un profesor.
+    """
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.rol == 'profesor'
+    
+
+class EstudianteRequiredMixin(UserPassesTestMixin):
+    """
+    Mixin para verificar que el usuario logueado es un estudiante.
+    """
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.rol == 'estudiante'
+    
+
+class AcudienteRequiredMixin(UserPassesTestMixin):
+    """
+    Mixin para verificar que el usuario logueado es un acudiente.
+    """
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.rol == 'acudiente'
+    
 
 class HomeView(TemplateView):
     template_name= "home.html"
     success_url= reverse_lazy("home")
 
 
-class RegistroUsuarioView(CreateView):
+class CustomLoginView(LoginView):
+    template_name = "login.html"
+    form_class = CustomLoginForm
+    redirect_authenticated_user = True  # si ya está logueado, lo redirige
+
+
+class CustomLogoutView(LogoutView):
+    next_page = "home"  # redirige a home después de cerrar sesión
+
+
+class RegistroUsuarioView(LoginRequiredMixin, ProfesorRequiredMixin, CreateView):
     model = User
     form_class = UsuarioRegistroForm
     template_name = "registro.html"
     success_url = reverse_lazy("usuarios")
 
     def form_valid(self, form):
+        # 1. Creamos el objeto User pero sin guardarlo aún en la BD
         user = form.save(commit=False)
         user.set_password(form.cleaned_data["password"])
-        user.save()
-        return super().form_valid(form)
+        user.save() # Ahora sí guardamos el User
+
+        # 2. Leemos el rol y los datos adicionales del formulario
+        rol = form.cleaned_data.get('rol')
+        
+        # 3. Creamos el perfil correspondiente al rol
+        if rol == 'profesor':
+            Profesor.objects.create(usuario=user)
+        
+        elif rol == 'estudiante':
+            curso = form.cleaned_data.get('curso')
+            acudiente_user = form.cleaned_data.get('acudiente')
+            
+            # Buscamos o creamos el perfil del acudiente
+            acudiente_obj, created = Acudiente.objects.get_or_create(usuario=acudiente_user)
+
+            Estudiante.objects.create(
+                usuario=user,
+                curso=curso,
+                acudiente=acudiente_obj
+            )
+        
+        elif rol == 'exalumno':
+            año = form.cleaned_data.get('año_promoción')
+            especialidad = form.cleaned_data.get('especialidad_tecnica')
+            Exalumno.objects.create(
+                usuario=user,
+                año_promoción=año,
+                especialidad_tecnica=especialidad
+            )
+        
+        elif rol == 'acudiente':
+            Acudiente.objects.create(usuario=user)
+            
+        # Añadimos la respuesta JSON para AJAX
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'id': user.id,
+                'email': user.email,
+                'full_name': user.get_full_name(),
+                'rol': user.get_rol_display(), # Usamos get_rol_display para obtener el nombre legible
+            })
+            
+        return super(CreateView, self).form_valid(form)
+
+    def form_invalid(self, form):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(form.errors, status=400)
+        return super().form_invalid(form)
 
 
-class ListarUsuariosView(ListView):
+class ListarUsuariosView(LoginRequiredMixin, ProfesorRequiredMixin, ListView):
     model = User
     template_name = "usuarios.html"
     context_object_name = "usuarios"
 
+    # Pasamos el formulario de registro al contexto
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['registro_form'] = UsuarioRegistroForm()
+        return context
 
-class EliminarUsuarioView(DeleteView):
+
+class EliminarUsuarioView(LoginRequiredMixin, ProfesorRequiredMixin, DeleteView):
     model = User
-    template_name = "eliminar_usuario.html"
     success_url = reverse_lazy("usuarios")
 
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.delete()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'message': 'Usuario eliminado correctamente.'})
+        return redirect(self.get_success_url())
+    
 
 class CursoRegistroView(CreateView):
     model = Curso
@@ -39,17 +224,42 @@ class CursoRegistroView(CreateView):
     template_name ="curso_registro.html"
     success_url = reverse_lazy("listar_cursos")
 
+    # Override form_valid para responder con JSON si es una petición AJAX
+    def form_valid(self, form):
+        curso = form.save()
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'id': curso.id,
+                'nombre_curso': curso.nombre_curso,
+            })
+        return super().form_valid(form)
 
-class ListarCursosView(ListView):
-    model = Curso 
-    template_name = "listar_cursos.html"
-    context_object_name = "cursos"
+    def form_invalid(self, form):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(form.errors, status=400)
+        return super().form_invalid(form)
 
 
 class EliminarCursoView(DeleteView):
     model = Curso
-    template_name = "eliminar_curso.html"
     success_url = reverse_lazy("listar_cursos")
+    # Override post para responder con JSON si es una petición AJAX
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.delete()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'message': 'Curso eliminado correctamente.'})
+        return redirect(self.get_success_url())
+
+class ListarCursosView(LoginRequiredMixin, ProfesorRequiredMixin, ListView):
+    model = Curso 
+    template_name = "listar_cursos.html"
+    context_object_name = "cursos"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['curso_form'] = CursoRegistroForm()
+        return context
 
 
 class MateriaRegistroView(CreateView): 
@@ -58,50 +268,231 @@ class MateriaRegistroView(CreateView):
     template_name = "materias_registro.html"
     success_url = reverse_lazy("listar_materias")
 
+    def form_valid(self, form):
+        materia = form.save()
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # Devolvemos los datos de la nueva materia, incluyendo los nombres de las relaciones
+            return JsonResponse({
+                'id': materia.id,
+                'nombre': materia.nombre,
+                'curso_nombre': materia.curso.nombre_curso,
+                'profesor_nombre': materia.profesor.usuario.get_full_name(),
+            })
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(form.errors, status=400)
+        return super().form_invalid(form)
+
 
 class ListarMateriasView(ListView):
     model = Materia 
-    template_name = "lista_de_materias.html"
+    template_name = "listar_materias.html"
     context_object_name = "materias"
+
+    # Pasamos el formulario de registro al contexto de la plantilla
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['materia_form'] = MateriaRegistroForm()
+        return context
 
 
 class EliminarMateriasView(DeleteView):
     model = Materia
-    template_name = "eliminar_materias.html"
     success_url = reverse_lazy("listar_materias")
-
-
-class AsistenciaRegistroView(CreateView):
-    model = Asistencia
-    form_class = AsistanciaRegistroFrom
-    template_name = "asistencias_registro.html"
-    success_url = reverse_lazy("asistencias")
-
-
-class ListarAsistenciasView(ListView):
-    model = Asistencia 
-    template_name = "lista_de_asistencias.html"
-    context_object_name = "asistencias"
-
-
+    
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.delete()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'message': 'Materia eliminada correctamente.'})
+        return redirect(self.get_success_url())
+    
+    
 class HorarioRegistroView(CreateView):
     model = Horario
     form_class = HorarioRegistroForm
     template_name = "registro_horario.html"
-    success_url = reverse_lazy("lista_de_horarios")
+    success_url = reverse_lazy("listar_horarios")
+
+    def form_valid(self, form):
+        horario = form.save()
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            # Devolvemos los datos, incluyendo el nombre de la materia
+            return JsonResponse({
+                'id': horario.id,
+                'curso_nombre': horario.materia.curso.nombre_curso,
+                'materia_nombre': horario.materia.nombre,
+                'dia_semana': horario.dia_semana,
+                # Formateamos la hora para mostrarla bien en JS
+                'hora_inicio': horario.hora_inicio.strftime('%H:%M'),
+                'hora_fin': horario.hora_fin.strftime('%H:%M'),
+            })
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse(form.errors, status=400)
+        return super().form_invalid(form)
 
 
-class ListasHorarioView(ListView):
+class ListarHorariosView(ListView):
     model = Horario
-    template_name = "lista_horarios.html"
+    template_name = "listar_horarios.html"
     context_object_name = "horarios"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['horario_form'] = HorarioRegistroForm()
+        return context
 
 
 class EliminarHorarioView(DeleteView):
     model = Horario
-    template_name = "eliminar_horario.html"
-    success_url = reverse_lazy("lista_de_horarios")
-
+    success_url = reverse_lazy("listar_horarios")
     
-
+    def post(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        self.object.delete()
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({'message': 'Horario eliminado correctamente.'})
+        return redirect(self.get_success_url())
     
+    
+class MiHorarioView(LoginRequiredMixin, EstudianteRequiredMixin, TemplateView):
+    template_name = 'mi_horario.html'
+
+    def get_horarios_base(self):
+        estudiante = self.request.user.perfil_estudiante
+        return Horario.objects.filter(materia__curso=estudiante.curso).order_by('hora_inicio')
+    
+    def get_asistencias_semana(self, inicio, fin):
+        estudiante = self.request.user.perfil_estudiante
+        return Asistencia.objects.filter(estudiante=estudiante, fecha__range=[inicio, fin])
+
+
+class MiHorarioProfesorView(LoginRequiredMixin, ProfesorRequiredMixin, TemplateView):
+    template_name = 'horario_profesor.html'
+
+    def get_horarios_base(self):
+        profesor = self.request.user.perfil_profesor
+        return Horario.objects.filter(materia__profesor=profesor).order_by('hora_inicio')
+
+    def get_asistencias_semana(self, inicio, fin):
+        profesor = self.request.user.perfil_profesor
+        # Buscamos cualquier registro de asistencia hecho por este profesor en este rango de fechas
+        return Asistencia.objects.filter(
+            horario__materia__profesor=profesor,
+            fecha__range=[inicio, fin]
+        )
+
+
+class TomarAsistenciaView(LoginRequiredMixin, ProfesorRequiredMixin, View):
+    template_name = 'tomar_asistencia.html'
+
+    # 'fecha' ahora viene de la URL
+    def get(self, request, horario_id, fecha):
+        horario = get_object_or_404(Horario, pk=horario_id)
+        fecha_obj = date.fromisoformat(fecha) # Convertimos el texto de la URL a un objeto fecha
+        
+        curso = horario.materia.curso
+        estudiantes = Estudiante.objects.filter(curso=curso).order_by('usuario__last_name')
+        
+        # Buscamos las asistencias para la fecha específica que nos pasaron
+        asistencias_dia = Asistencia.objects.filter(horario=horario, fecha=fecha_obj)
+        estados_guardados = {a.estudiante.pk: a.estado for a in asistencias_dia}
+
+        context = {
+            'horario': horario,
+            'estudiantes': estudiantes,
+            'estados_guardados': estados_guardados,
+            'fecha': fecha_obj, # Pasamos la fecha a la plantilla para mostrarla
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, horario_id, fecha):
+        horario = get_object_or_404(Horario, pk=horario_id)
+        fecha_obj = date.fromisoformat(fecha)
+        curso = horario.materia.curso
+        estudiantes = Estudiante.objects.filter(curso=curso)
+
+        for estudiante in estudiantes:
+            estado_seleccionado = request.POST.get(f'asistencia-{estudiante.pk}')
+
+            if estado_seleccionado:
+                asistencia_obj, created = Asistencia.objects.update_or_create(
+                    horario=horario,
+                    estudiante=estudiante,
+                    fecha=fecha_obj,
+                    defaults={'estado': estado_seleccionado}
+                )
+
+                # --- LÓGICA DE ENVÍO DE CORREO ---
+                # Si el estado es 'ausente' Y el estudiante tiene un acudiente con correo
+                if estado_seleccionado == 'ausente' and estudiante.acudiente and estudiante.acudiente.usuario.email:
+                    self.enviar_correo_ausencia(estudiante, horario, fecha_obj)
+
+        messages.success(request, f'Asistencia para el {fecha_obj.strftime("%d/%m/%Y")} guardada correctamente.')
+        return redirect(f"{reverse('horario_profesor')}?fecha={fecha}")
+
+    def enviar_correo_ausencia(self, estudiante, horario, fecha):
+        acudiente = estudiante.acudiente
+        context = {
+            'estudiante': estudiante,
+            'horario': horario,
+            'fecha': fecha,
+        }
+        
+        subject = f"Notificación de Ausencia: {estudiante.usuario.get_full_name()}"
+        html_message = render_to_string('notificacion_ausencia.html', context)
+        plain_message = f"El estudiante {estudiante.usuario.get_full_name()} no asistió a la clase de {horario.materia.nombre} el {fecha}."
+        
+        send_mail(
+            subject,
+            plain_message,
+            'noreply@tuinstitucion.com', # Remitente
+            [acudiente.usuario.email],   # Destinatario
+            html_message=html_message
+        )
+
+
+class HorariosAcudienteView(LoginRequiredMixin, AcudienteRequiredMixin, TemplateView):
+    template_name = 'horarios_acudiente.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+
+        if user.rol == 'acudiente' and hasattr(user, 'perfil_acudiente'):
+            acudiente = user.perfil_acudiente
+            # Obtenemos todos los estudiantes a cargo de este acudiente
+            estudiantes_acudidos = acudiente.estudiantes_acudidos.all().select_related('usuario', 'curso')
+
+            # Para cada estudiante, preparamos su horario semanal
+            datos_horarios = []
+            for estudiante in estudiantes_acudidos:
+                # Reutilizamos la lógica del Mixin para cada estudiante
+                horario_semanal_view = MiHorarioView()
+                horario_semanal_view.request = self.request
+                
+                # Le "decimos" a la vista de qué estudiante obtener los datos
+                horario_semanal_view.request.user.perfil_estudiante = estudiante
+                
+                # Obtenemos el contexto del horario para ESE estudiante
+                contexto_estudiante = horario_semanal_view.get_context_data()
+                
+                datos_horarios.append({
+                    'estudiante': estudiante,
+                    'horario_semanal': contexto_estudiante.get('horario_semanal'),
+                    'semana_actual_str': contexto_estudiante.get('semana_actual_str'),
+                    'semana_anterior': contexto_estudiante.get('semana_anterior'),
+                    'semana_siguiente': contexto_estudiante.get('semana_siguiente'),
+                })
+            
+            context['datos_horarios'] = datos_horarios
+            # Pasamos la navegación de la primera cuenta para los botones generales
+            if datos_horarios:
+                context.update(datos_horarios[0])
+
+        return context

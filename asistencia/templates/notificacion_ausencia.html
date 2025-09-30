@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Notificación de Ausencia</title>
+</head>
+<body style="font-family: sans-serif;">
+    <h2 style="color: #dc3545;">Notificación de Ausencia</h2>
+    <p>Estimado(a) acudiente,</p>
+    <p>
+        Le informamos que el/la estudiante <strong>{{ estudiante.usuario.get_full_name }}</strong>
+        fue marcado como <strong>AUSENTE</strong> en la siguiente clase:
+    </p>
+    <ul style="list-style-type: none; padding: 0;">
+        <li><strong>Materia:</strong> {{ horario.materia.nombre }}</li>
+        <li><strong>Profesor:</strong> {{ horario.materia.profesor.usuario.get_full_name }}</li>
+        <li><strong>Fecha:</strong> {{ fecha|date:"l, d/m/Y" }}</li>
+        <li><strong>Hora:</strong> {{ horario.hora_inicio|time:"h:i A" }}</li>
+    </ul>
+    <p>Atentamente,<br>Sistema de Asistencia</p>
+</body>
+</html>

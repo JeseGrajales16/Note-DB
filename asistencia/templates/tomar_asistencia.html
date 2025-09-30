@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<style>
+  .asistencia-form .btn-check { display: none; } /* Oculta el radio button real */
+  .asistencia-form .btn-check + label {
+    border: 1px solid #ccc;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0.3rem 0.8rem;
+  }
+  /* Estilos para cada estado cuando el radio button está seleccionado */
+  .asistencia-form .btn-check:checked + label {
+    color: white;
+    border-color: transparent;
+  }
+</style>
+
+<div class="container mt-4">
+  <div class="card shadow">
+    <div class="card-header bg-light">
+      <h4 class="mb-0">Registro de Asistencia</h4>
+      <p class="mb-0 text-muted">
+        <strong>Materia:</strong> {{ horario.materia.nombre }} | 
+        <strong>Curso:</strong> {{ horario.materia.curso.nombre_curso }} |
+        <strong>Fecha:</strong> {{ fecha|date:"d/m/Y" }}
+      </p>
+    </div>
+    <div class="card-body">
+      <form method="post" class="asistencia-form">
+        {% csrf_token %}
+        <div class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-dark">
+              <tr>
+                <th>Estudiante</th>
+                <th class="text-center">Asistencia</th>
+              </tr>
+            </thead>
+                <tbody>
+                    {% for estudiante in estudiantes %}
+                    <tr>
+                        <td>{{ estudiante.usuario.get_full_name }}</td>
+                        <td class="text-center">
+                        <div class="btn-group" role="group">
+                            
+                            <input type="radio" class="btn-check" name="asistencia-{{ estudiante.pk }}" id="radio-presente-{{ forloop.counter }}" value="presente" 
+                                {% if estudiante.estado_guardado == 'presente' %}checked{% endif %}>
+                            <label class="btn btn-outline-secondary" for="radio-presente-{{ forloop.counter }}" title="Presente">✅</label>
+                            
+                            <input type="radio" class="btn-check" name="asistencia-{{ estudiante.pk }}" id="radio-ausente-{{ forloop.counter }}" value="ausente" 
+                                {% if estudiante.estado_guardado == 'ausente' %}checked{% endif %}>
+                            <label class="btn btn-outline-secondary" for="radio-ausente-{{ forloop.counter }}" title="Ausente">❌</label>
+                            
+                            <input type="radio" class="btn-check" name="asistencia-{{ estudiante.pk }}" id="radio-tarde-{{ forloop.counter }}" value="tarde" 
+                                {% if estudiante.estado_guardado == 'tarde' %}checked{% endif %}>
+                            <label class="btn btn-outline-secondary" for="radio-tarde-{{ forloop.counter }}" title="Tarde">🕒</label>
+
+                            <input type="radio" class="btn-check" name="asistencia-{{ estudiante.pk }}" id="radio-excusa-{{ forloop.counter }}" value="excusa" 
+                                {% if estudiante.estado_guardado == 'excusa' %}checked{% endif %}>
+                            <label class="btn btn-outline-secondary" for="radio-excusa-{{ forloop.counter }}" title="Excusa">📄</label>
+
+                        </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+          </table>
+        </div>
+        <div class="d-grid mt-3">
+          <button type="submit" class="btn btn-success">Guardar Asistencia</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

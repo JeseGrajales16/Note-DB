@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-sm">
+    <img src="{% static 'imagenes/sedeprincipal.jpg' %}" class="card-img-top" alt="Evento General" style="height: 300px; object-fit: cover;">
+    <div class="card-body">
+      <h2 class="card-title">Eventos de la Institución</h2>
+      <p class="card-text">
+        Bienvenidos a nuestra sección de eventos. Aquí publicaremos todas las actividades generales
+        de interés para nuestra comunidad educativa, incluyendo eventos culturales, deportivos y académicos.
+        ¡Mantente conectado para no perderte nada!
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

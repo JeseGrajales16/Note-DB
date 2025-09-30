@@ -8,13 +8,16 @@
 <div id="carouselExample" class="carousel slide mt-0" data-bs-ride="carousel">
   <div class="carousel-inner">
     <div class="carousel-item active">
-      <img src="{% static 'imagenes/carrusel1.jpg' %}" class="d-block w-100" alt="Primera imagen">
+      <img src="{% static 'imagenes/Carrusel1.jpg' %}" class="d-block w-100" alt="Primera imagen">
     </div>
     <div class="carousel-item">
-      <img src="{% static 'imagenes/carrusel.jpg' %}" class="d-block w-100" alt="Segunda imagen">
+      <img src="{% static 'imagenes/Carrusel2.jpg' %}" class="d-block w-100" alt="Segunda imagen">
     </div>
     <div class="carousel-item">
-      <img src="{% static 'imagenes/carrusel3.jpg' %}" class="d-block w-100" alt="Tercera imagen">
+      <img src="{% static 'imagenes/Carrusel3.jpg' %}" class="d-block w-100" alt="Tercera imagen">
+    </div>
+    <div class="carousel-item">
+      <img src="{% static 'imagenes/Carrusel4.jpg' %}" class="d-block w-100" alt="Tercera imagen">
     </div>
   </div>
   <button class="carousel-control-prev" type="button" data-bs-target="#carouselExample" data-bs-slide="prev">
@@ -55,34 +58,130 @@
 <!-- Información de Sedes y Especialidades -->
 <section class="container my-5">
   <h2 class="text-center mb-4">Nuestras Sedes y Especialidades Técnicas</h2>
-  
+
+  <!-- Sede Principal -->
   <div class="row align-items-center mb-5">
     <div class="col-md-6">
-      <img src="{% static 'imagenes/sedeprincipal.jpg' %}" class="img-fluid rounded shadow" alt="Sede Principal">
+      <img src="{% static 'imagenes/Instalaciones4.jpg' %}" class="img-fluid rounded shadow" alt="Sede Principal">
     </div>
     <div class="col-md-6">
       <h3>Sede Principal</h3>
-      <p>La sede principal cuenta con amplias instalaciones...</p>
-    </div>
-  </div>
-  
-  <div class="row align-items-center mb-5">
-    <div class="col-md-6 order-md-2">
-      <img src="{% static 'imagenes/S10.jpg' %}" class="img-fluid rounded shadow" alt="Especialidad Técnica 1">
-    </div>
-    <div class="col-md-6 order-md-1">
-      <h3>Especialidad en Sistemas</h3>
-      <p>Formamos técnicos en mantenimiento y desarrollo de software...</p>
+      <p>La sede principal cuenta con amplias instalaciones, espacios modernos y ambientes de formación adecuados para las diferentes especialidades técnicas.</p>
     </div>
   </div>
 
-  <div class="row align-items-center">
+  <!-- Técnico en Mantenimiento y Ensamble de Equipos Electrónicos -->
+  <div class="row align-items-center mb-5">
+    <div class="col-md-6 order-md-2">
+      <img src="{% static 'imagenes/electronica.jpg' %}" class="img-fluid rounded shadow" alt="Técnico en Mantenimiento y Ensamble de Equipos Electrónicos">
+    </div>
+    <div class="col-md-6 order-md-1">
+      <h3>Técnico en Mantenimiento y Ensamble de Equipos Electrónicos</h3>
+      <p>En este programa se aprende a:</p>
+      <ul>
+        <li>Diagnosticar fallas en circuitos electrónicos.</li>
+        <li>Desensamblar y ensamblar equipos electrónicos y tarjetas (circuitos impresos).</li>
+        <li>Realizar mantenimiento preventivo, correctivo y calibraciones, con base en manuales técnicos.</li>
+        <li>Aplicar prácticas de seguridad, normativas ambientales y de salud ocupacional.</li>
+      </ul>
+      <p><strong>Duración (estimada):</strong></p>
+      <ul>
+        <li>Total de 2.208 horas, distribuidas entre etapa lectiva y etapa productiva/práctica real.</li>
+        <li>Una versión del plan sugiere 1.344 horas lectivas + 864 horas de práctica.</li>
+      </ul>
+      <p><strong>Salidas laborales / perfil de egresado:</strong></p>
+      <ul>
+        <li>Trabajar en empresas del sector manufacturero, mantenimiento electrónico, ensamblaje de equipos, laboratorios de servicios técnicos.</li>
+        <li>En departamentos de mantenimiento electrónico o diseño de hardware.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Técnico en Programación de Software -->
+  <div class="row align-items-center mb-5">
     <div class="col-md-6">
-      <img src="{% static 'imagenes/S1.jpg' %}" class="img-fluid rounded shadow" alt="Especialidad Técnica 2">
+      <img src="{% static 'imagenes/programacion.jpg' %}" class="img-fluid rounded shadow" alt="Técnico en Programación de Software">
     </div>
     <div class="col-md-6">
-      <h3>Especialidad en Agropecuaria</h3>
-      <p>Desarrollamos competencias en el área agrícola y pecuaria...</p>
+      <h3>Técnico en Programación de Software</h3>
+      <p><strong>Propósito / competencias:</strong></p>
+      <ul>
+        <li>Formar personal capaz de diseñar, desarrollar, probar e implementar aplicaciones de software (web, escritorio, móviles).</li>
+        <li>Analizar requisitos, construir la solución informática con estándares de calidad.</li>
+        <li>Manejar metodologías de desarrollo de software, buenas prácticas, mantenimiento de código.</li>
+      </ul>
+      <p><strong>Duración:</strong></p>
+      <ul>
+        <li>El programa presencial tiene una duración total de 2.304 horas.</li>
+        <li>Se distribuye entre etapas teóricas y prácticas.</li>
+      </ul>
+      <p><strong>Perfil de ingreso:</strong></p>
+      <ul>
+        <li>Haber cursado al menos hasta noveno grado (varía según oferta regional).</li>
+        <li>Interés en lógica, matemáticas básicas e informática.</li>
+      </ul>
+      <p><strong>Salidas laborales / perfil de egresado:</strong></p>
+      <ul>
+        <li>Desarrollador de software, programador, analista de sistemas, mantenimiento de aplicaciones.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Técnico en Alistamiento de Laboratorios de Análisis y Ensayos -->
+  <div class="row align-items-center mb-5">
+    <div class="col-md-6 order-md-2">
+      <img src="{% static 'imagenes/muestras_quimicas.jpg' %}" class="img-fluid rounded shadow" alt="Técnico en Alistamiento de Laboratorios de Análisis y Ensayos">
+    </div>
+    <div class="col-md-6 order-md-1">
+      <h3>Técnico en Alistamiento de Laboratorios de Análisis y Ensayos</h3>
+      <p><strong>Contenido / competencias:</strong></p>
+      <ul>
+        <li>Preparar áreas de trabajo de laboratorio, limpieza y desinfección.</li>
+        <li>Manejar sustancias químicas, reactivos, almacenamiento seguro, etiquetado.</li>
+        <li>Calibrar equipos de laboratorio, alistar instrumentos, verificar su funcionamiento.</li>
+        <li>Aplicar normas de seguridad, salud ocupacional, buenas prácticas de laboratorio.</li>
+      </ul>
+      <p><strong>Duración aproximada:</strong></p>
+      <ul>
+        <li>Algunas versiones indican 6 meses de formación lectiva + 12 meses de práctica productiva.</li>
+        <li>En diseño curricular se menciona que el programa completo podría estar alrededor de 18 meses.</li>
+      </ul>
+      <p><strong>Salidas laborales / perfil de egresado:</strong></p>
+      <ul>
+        <li>Laboratorios industriales, de calidad, farmacéuticos, alimenticios, cosméticos, análisis químico.</li>
+        <li>Apoyar en ensayos, preparar muestras, dar soporte técnico analítico.</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Técnico en Monitoreo Ambiental -->
+  <div class="row align-items-center">
+    <div class="col-md-6">
+      <img src="{% static 'imagenes/monitoreo_ambiental.jpg' %}" class="img-fluid rounded shadow" alt="Técnico en Monitoreo Ambiental">
+    </div>
+    <div class="col-md-6">
+      <h3>Técnico en Monitoreo Ambiental</h3>
+      <p><strong>Contenido / competencias:</strong></p>
+      <ul>
+        <li>Realizar muestreos y análisis de variables ambientales: agua, suelo, aire, residuos, ruido, olores.</li>
+        <li>Interpretar resultados, elaborar informes, verificar cumplimiento de normativas ambientales.</li>
+        <li>Aplicar medidas correctivas, planificar acciones ambientales, manejo de tecnologías de instrumentación ambiental.</li>
+      </ul>
+      <p><strong>Duración aproximada:</strong></p>
+      <ul>
+        <li>Total de 2.208 horas (lectiva + etapa productiva) para el programa técnico.</li>
+        <li>Etapa lectiva + práctica definida en los planes curriculares.</li>
+      </ul>
+      <p><strong>Perfil de ingreso:</strong></p>
+      <ul>
+        <li>Mayor de 14 años (o según la oferta regional).</li>
+        <li>Conocimientos básicos de informática.</li>
+      </ul>
+      <p><strong>Salidas laborales / perfil de egresado:</strong></p>
+      <ul>
+        <li>Empresas de consultoría ambiental, entidades de monitoreo, oficinas ambientales de gobiernos, industrias con control ambiental.</li>
+        <li>Responsable de monitoreos, muestreos, evaluaciones ambientales.</li>
+      </ul>
     </div>
   </div>
 </section>
@@ -91,19 +190,19 @@
 <section class="container my-5">
   <h2 class="text-center mb-4">Galería de Fotos</h2>
   <div class="d-flex overflow-auto gap-3">
-    <img src="{% static 'imagenes/S3.jpg' %}" class="img-thumbnail galeria-img" alt="Galería 1">
-    <img src="{% static 'imagenes/S2.jpg' %}" class="img-thumbnail galeria-img" alt="Galería 2">
-    <img src="{% static 'imagenes/S4.jpg' %}" class="img-thumbnail galeria-img" alt="Galería 3">
-    <img src="{% static 'imagenes/S5.jpg' %}" class="img-thumbnail galeria-img" alt="Galería 4">
+    <img src="{% static 'imagenes/Instalaciones1.jpg' %}" class="img-thumbnail galeria-img" alt="Galería 1">
+    <img src="{% static 'imagenes/Instalaciones2.jpg' %}" class="img-thumbnail galeria-img" alt="Galería 2">
+    <img src="{% static 'imagenes/Instalaciones3.jpg' %}" class="img-thumbnail galeria-img" alt="Galería 3">
+    <img src="{% static 'imagenes/Instalaciones5.jpg' %}" class="img-thumbnail galeria-img" alt="Galería 4">
   </div>
 </section>
 
 <!-- Contacto -->
 <section class="container my-5">
   <h2 class="text-center mb-4">Contacto</h2>
-  <p class="text-center">📍 Dirección: Calle 123 #45-67, San Luis</p>
-  <p class="text-center">📞 Teléfono: (123) 456 7890</p>
-  <p class="text-center">📧 Email: contacto@sanluis.edu.co</p>
+  <p class="text-center">📍 Dirección: Cra 9 N° 14-65, Barrio El Bosque Garagoa (Boy)</p>
+  <p class="text-center">📞 Teléfono: (608) 750 1877</p>
+  <p class="text-center">📧 Email: insanluis@yahoo.com</p>
 </section>
 
 <!-- Modal para ampliar imágenes de galería -->

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow-sm">
+    <img src="{% static 'imagenes/sedeprincipal.jpg' %}" class="card-img-top" alt="Evento de Exalumnos" style="height: 300px; object-fit: cover;">
+    <div class="card-body">
+      <h2 class="card-title">Eventos Exclusivos para Exalumnos</h2>
+      <p class="card-text">
+        ¡Hola de nuevo! En esta sección encontrarás toda la información sobre los próximos
+        reencuentros, oportunidades de networking y actividades especiales pensadas solo para ti.
+        Nos alegra que sigas siendo parte de nuestra historia.
+      </p>
+      <p class="text-muted">
+        Este contenido es estático y solo es accesible a través del enlace del menú para exalumnos.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}

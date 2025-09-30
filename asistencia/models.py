@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -63,14 +64,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     
 
 class Acudiente(models.Model):
-    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil_acudiente')
 
     def __str__(self):
         return self.usuario.get_full_name()
 
 
 class Profesor(models.Model):
-    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil_profesor')
 
     def __str__(self):
         return self.usuario.get_full_name()
@@ -84,16 +85,16 @@ class Curso(models.Model):
 
 
 class Estudiante(models.Model):
-    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
-    acudiente = models.ForeignKey(Acudiente, on_delete=models.SET_NULL, null=True, blank=True)
-    curso = models.ForeignKey(Curso, on_delete=models.CASCADE)
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil_estudiante')
+    acudiente = models.ForeignKey(Acudiente, on_delete=models.SET_NULL, null=True, blank=True, related_name='estudiantes_acudidos')
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='estudiantes')
 
     def __str__(self):
         return self.usuario.get_full_name()
     
 
 class Exalumno(models.Model):
-    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='perfil_exalumno')
     año_promoción = models.CharField(max_length=4)
     especialidad_tecnica = models.CharField(max_length=50)
 
@@ -103,35 +104,74 @@ class Exalumno(models.Model):
 
 class Materia(models.Model):
     nombre = models.CharField(max_length=100)
-    curso = models.ForeignKey(Curso, on_delete=models.CASCADE)
-    profesor = models.ForeignKey(Profesor, on_delete=models.CASCADE)
+    curso = models.ForeignKey(Curso, on_delete=models.CASCADE, related_name='materias')
+    profesor = models.ForeignKey(Profesor, on_delete=models.CASCADE, related_name='materias_dictadas')
 
     def __str__(self):
         return self.nombre
 
 
 class Horario(models.Model):
-    materia = models.ForeignKey(Materia, on_delete=models.CASCADE)
-    dia_semana = models.CharField(max_length=15)  # Ej: Lunes, Martes
+    DIA_CHOICES = [
+        ('Lunes', 'Lunes'),
+        ('Martes', 'Martes'),
+        ('Miércoles', 'Miércoles'),
+        ('Jueves', 'Jueves'),
+        ('Viernes', 'Viernes'),
+    ]
+
+    materia = models.ForeignKey(Materia, on_delete=models.CASCADE, related_name='horarios')
+    dia_semana = models.CharField(max_length=15, choices=DIA_CHOICES)
     hora_inicio = models.TimeField()
     hora_fin = models.TimeField()
 
     def __str__(self):
         return f"{self.materia.nombre} - {self.dia_semana}"
 
+    def save(self, *args, **kwargs):
+        self.full_clean() 
+        profesor = self.materia.profesor
+        curso = self.materia.curso
+        dia = self.dia_semana
+        inicio = self.hora_inicio
+        fin = self.hora_fin
+
+        conflicto_profesor = Horario.objects.filter(
+            dia_semana=dia,
+            materia__profesor=profesor,
+            hora_inicio__lt=fin,
+            hora_fin__gt=inicio
+        ).exclude(pk=self.pk).exists()
+
+        if conflicto_profesor:
+            raise ValidationError(f'El profesor {profesor} ya tiene una clase asignada en este horario.')
+        conflicto_curso = Horario.objects.filter(
+            dia_semana=dia,
+            materia__curso=curso,
+            hora_inicio__lt=fin,
+            hora_fin__gt=inicio
+        ).exclude(pk=self.pk).exists()
+
+        if conflicto_curso:
+            raise ValidationError(f'El curso {curso} ya tiene una materia asignada en este horario.')
+
+        super().save(*args, **kwargs)
+
 
 class Asistencia(models.Model):
-    estudiante = models.ForeignKey(Estudiante, on_delete=models.CASCADE)
-    curso = models.ForeignKey(Curso, on_delete=models.CASCADE)
-    profesor = models.ForeignKey(Profesor, on_delete=models.CASCADE)
-    materia = models.ForeignKey(Materia, on_delete=models.CASCADE)
-    horario = models.ForeignKey(Horario, on_delete=models.CASCADE)
+    fecha = models.DateField(default=timezone.now) 
+    horario = models.ForeignKey(Horario, on_delete=models.CASCADE, related_name='asistencias')
+    estudiante = models.ForeignKey(Estudiante, on_delete=models.CASCADE, related_name='asistencias')
     estado = models.CharField(max_length=20, choices=[
-        ('asistio', 'Asistió'),
+        ('presente', 'Presente'),
         ('ausente', 'Ausente'),
         ('tarde', 'Tarde'),
+        ('excusa', 'Excusa')
     ])
     observaciones = models.TextField(blank=True, null=True)
 
+    class Meta:
+        unique_together = ('fecha', 'horario', 'estudiante')
+
     def __str__(self):
-        return f"{self.estudiante.usuario.first_name} - {self.materia.nombre}"
+        return f"{self.estudiante} - {self.horario.materia.nombre} - {self.fecha}"

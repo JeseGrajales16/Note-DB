@@ -33,60 +33,54 @@ from .models import (
 )
 
 
+def construir_horario_semanal(horarios_base, asistencias_semana, inicio_semana):
+    """
+    Función que toma una lista de horarios y asistencias y devuelve un
+    diccionario estructurado por fecha para la semana dada.
+    """
+    mapa_asistencias_estudiante = {(a.horario.id, a.fecha): a.estado for a in asistencias_semana}
+    asistencias_tomadas_profesor = set(asistencias_semana.values_list('horario_id', 'fecha'))
+    
+    DIA_MAP = {'Lunes': 0, 'Martes': 1, 'Miércoles': 2, 'Jueves': 3, 'Viernes': 4}
+    
+    dias_semana_fechas = [(inicio_semana + timedelta(days=i)) for i in range(5)]
+    horario_semanal = {dia: [] for dia in dias_semana_fechas}
+
+    for horario in horarios_base:
+        dia_numerico_horario = DIA_MAP.get(horario.dia_semana)
+        if dia_numerico_horario is not None:
+            fecha_de_clase = inicio_semana + timedelta(days=dia_numerico_horario)
+            
+            estado_estudiante = mapa_asistencias_estudiante.get((horario.id, fecha_de_clase))
+            asistencia_tomada = (horario.id, fecha_de_clase) in asistencias_tomadas_profesor
+            
+            horario_semanal[fecha_de_clase].append({
+                'horario': horario,
+                'estado': estado_estudiante,
+                'asistencia_tomada': asistencia_tomada,
+            })
+    return horario_semanal
+
+
 class HorarioSemanalMixin:
     """
-    Este Mixin calcula la semana actual y prepara el contexto con los
-    horarios y las asistencias correspondientes. VERSIÓN CORREGIDA.
+    Mixin simplificado que calcula las fechas y llama a la función de ayuda.
     """
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         
         fecha_str = self.request.GET.get('fecha')
-        if fecha_str:
-            hoy = date.fromisoformat(fecha_str)
-        else:
-            hoy = timezone.now().date()
-
+        hoy = date.fromisoformat(fecha_str) if fecha_str else timezone.now().date()
+        
         inicio_semana = hoy - timedelta(days=hoy.weekday())
         fin_semana = inicio_semana + timedelta(days=4)
         
         horarios_base = self.get_horarios_base()
         asistencias_semana = self.get_asistencias_semana(inicio_semana, fin_semana)
-        
-        # 1. Creamos dos estructuras de datos para las asistencias:
-        # Un mapa para el estado del estudiante
-        mapa_asistencias_estudiante = {(a.horario.id, a.fecha): a.estado for a in asistencias_semana}
-        
-        # Un CONJUNTO (set) para saber si la asistencia fue tomada por el profesor.
-        # Es más eficiente para verificar si un elemento existe.
-        asistencias_tomadas_profesor = set(asistencias_semana.values_list('horario_id', 'fecha'))
 
-        DIA_MAP = {
-            'Lunes': 0, 'Martes': 1, 'Miércoles': 2, 'Jueves': 3, 'Viernes': 4
-        }
-
-        dias_semana_fechas = [(inicio_semana + timedelta(days=i)) for i in range(5)]
-        horario_semanal = {dia: [] for dia in dias_semana_fechas}
+        # Usamos la nueva función de ayuda
+        context['horario_semanal'] = construir_horario_semanal(horarios_base, asistencias_semana, inicio_semana)
         
-        for horario in horarios_base:
-            dia_numerico_horario = DIA_MAP.get(horario.dia_semana)
-            
-            if dia_numerico_horario is not None:
-                fecha_de_clase = inicio_semana + timedelta(days=dia_numerico_horario)
-                
-                # Buscamos en nuestras estructuras de datos
-                estado_estudiante = mapa_asistencias_estudiante.get((horario.id, fecha_de_clase))
-                asistencia_tomada = (horario.id, fecha_de_clase) in asistencias_tomadas_profesor
-                
-                # Añadimos AMBOS datos al diccionario
-                horario_semanal[fecha_de_clase].append({
-                    'horario': horario,
-                    'estado': estado_estudiante,
-                    'asistencia_tomada': asistencia_tomada,
-                })
-        
-        context['horario_semanal'] = horario_semanal
-        context['dias_semana_fechas'] = dias_semana_fechas
         context['semana_anterior'] = inicio_semana - timedelta(days=7)
         context['semana_siguiente'] = inicio_semana + timedelta(days=7)
         context['semana_actual_str'] = f"{inicio_semana.strftime('%d/%m/%Y')} - {fin_semana.strftime('%d/%m/%Y')}"
@@ -360,32 +354,50 @@ class EliminarHorarioView(DeleteView):
         return redirect(self.get_success_url())
     
     
-class MiHorarioView(LoginRequiredMixin, EstudianteRequiredMixin, TemplateView):
+class MiHorarioView(LoginRequiredMixin, EstudianteRequiredMixin, HorarioSemanalMixin, TemplateView):
     template_name = 'mi_horario.html'
 
     def get_horarios_base(self):
-        estudiante = self.request.user.perfil_estudiante
-        return Horario.objects.filter(materia__curso=estudiante.curso).order_by('hora_inicio')
+        try:
+            estudiante = self.request.user.perfil_estudiante
+            return Horario.objects.filter(materia__curso=estudiante.curso).order_by('hora_inicio')
+        except User.perfil_estudiante.RelatedObjectDoesNotExist:
+            return Horario.objects.none()
     
     def get_asistencias_semana(self, inicio, fin):
-        estudiante = self.request.user.perfil_estudiante
-        return Asistencia.objects.filter(estudiante=estudiante, fecha__range=[inicio, fin])
+        try:
+            estudiante = self.request.user.perfil_estudiante
+            return Asistencia.objects.filter(estudiante=estudiante, fecha__range=[inicio, fin])
+        except User.perfil_estudiante.RelatedObjectDoesNotExist:
+            return Asistencia.objects.none()
 
 
-class MiHorarioProfesorView(LoginRequiredMixin, ProfesorRequiredMixin, TemplateView):
+class MiHorarioProfesorView(LoginRequiredMixin, ProfesorRequiredMixin, HorarioSemanalMixin, TemplateView):
     template_name = 'horario_profesor.html'
 
     def get_horarios_base(self):
-        profesor = self.request.user.perfil_profesor
-        return Horario.objects.filter(materia__profesor=profesor).order_by('hora_inicio')
+        """
+        Le dice al Mixin qué horarios base debe buscar para este profesor.
+        """
+        try:
+            profesor = self.request.user.perfil_profesor
+            return Horario.objects.filter(materia__profesor=profesor).order_by('hora_inicio')
+        except User.perfil_profesor.RelatedObjectDoesNotExist:
+            # Si el usuario no tiene perfil de profesor, no devuelve horarios.
+            return Horario.objects.none()
 
     def get_asistencias_semana(self, inicio, fin):
-        profesor = self.request.user.perfil_profesor
-        # Buscamos cualquier registro de asistencia hecho por este profesor en este rango de fechas
-        return Asistencia.objects.filter(
-            horario__materia__profesor=profesor,
-            fecha__range=[inicio, fin]
-        )
+        """
+        Le dice al Mixin qué asistencias debe buscar para colorear el horario.
+        """
+        try:
+            profesor = self.request.user.perfil_profesor
+            return Asistencia.objects.filter(
+                horario__materia__profesor=profesor,
+                fecha__range=[inicio, fin]
+            )
+        except User.perfil_profesor.RelatedObjectDoesNotExist:
+            return Asistencia.objects.none()
 
 
 class TomarAsistenciaView(LoginRequiredMixin, ProfesorRequiredMixin, View):
@@ -462,37 +474,37 @@ class HorariosAcudienteView(LoginRequiredMixin, AcudienteRequiredMixin, Template
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        user = self.request.user
+        
+        # Obtenemos la fecha de la URL, o la de hoy si no existe
+        fecha_str = self.request.GET.get('fecha')
+        hoy = date.fromisoformat(fecha_str) if fecha_str else timezone.now().date()
+        inicio_semana = hoy - timedelta(days=hoy.weekday())
 
-        if user.rol == 'acudiente' and hasattr(user, 'perfil_acudiente'):
-            acudiente = user.perfil_acudiente
-            # Obtenemos todos los estudiantes a cargo de este acudiente
-            estudiantes_acudidos = acudiente.estudiantes_acudidos.all().select_related('usuario', 'curso')
+        try:
+            acudiente = self.request.user.perfil_acudiente
+            estudiantes = acudiente.estudiantes_acudidos.all().select_related('usuario', 'curso')
 
-            # Para cada estudiante, preparamos su horario semanal
             datos_horarios = []
-            for estudiante in estudiantes_acudidos:
-                # Reutilizamos la lógica del Mixin para cada estudiante
-                horario_semanal_view = MiHorarioView()
-                horario_semanal_view.request = self.request
+            for estudiante in estudiantes:
+                # Obtenemos los datos para este estudiante específico
+                horarios_base = Horario.objects.filter(materia__curso=estudiante.curso)
+                asistencias_semana = Asistencia.objects.filter(estudiante=estudiante, fecha__range=[inicio_semana, inicio_semana + timedelta(days=4)])
                 
-                # Le "decimos" a la vista de qué estudiante obtener los datos
-                horario_semanal_view.request.user.perfil_estudiante = estudiante
-                
-                # Obtenemos el contexto del horario para ESE estudiante
-                contexto_estudiante = horario_semanal_view.get_context_data()
-                
+                # Usamos nuestra función de ayuda para construir el horario
+                horario_semanal_estudiante = construir_horario_semanal(horarios_base, asistencias_semana, inicio_semana)
+
                 datos_horarios.append({
                     'estudiante': estudiante,
-                    'horario_semanal': contexto_estudiante.get('horario_semanal'),
-                    'semana_actual_str': contexto_estudiante.get('semana_actual_str'),
-                    'semana_anterior': contexto_estudiante.get('semana_anterior'),
-                    'semana_siguiente': contexto_estudiante.get('semana_siguiente'),
+                    'horario_semanal': horario_semanal_estudiante,
                 })
-            
+
             context['datos_horarios'] = datos_horarios
-            # Pasamos la navegación de la primera cuenta para los botones generales
-            if datos_horarios:
-                context.update(datos_horarios[0])
+            # Añadimos las fechas de navegación al contexto principal
+            context['semana_anterior'] = inicio_semana - timedelta(days=7)
+            context['semana_siguiente'] = inicio_semana + timedelta(days=7)
+            context['semana_actual_str'] = f"{inicio_semana.strftime('%d/%m/%Y')} - {(inicio_semana + timedelta(days=4)).strftime('%d/%m/%Y')}"
+        
+        except User.perfil_acudiente.RelatedObjectDoesNotExist:
+            context['datos_horarios'] = []
 
         return context

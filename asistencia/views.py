@@ -312,14 +312,13 @@ class HorarioRegistroView(CreateView):
 
     def form_valid(self, form):
         horario = form.save()
+        
         if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            # Devolvemos los datos, incluyendo el nombre de la materia
             return JsonResponse({
                 'id': horario.id,
                 'curso_nombre': horario.materia.curso.nombre_curso,
                 'materia_nombre': horario.materia.nombre,
                 'dia_semana': horario.dia_semana,
-                # Formateamos la hora para mostrarla bien en JS
                 'hora_inicio': horario.hora_inicio.strftime('%H:%M'),
                 'hora_fin': horario.hora_fin.strftime('%H:%M'),
             })

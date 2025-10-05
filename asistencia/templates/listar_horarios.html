@@ -138,6 +138,7 @@ document.addEventListener('DOMContentLoaded', function() {
     .then(data => {
       const newRow = `
         <tr id="horario-${data.id}">
+          <td>${data.curso_nombre}</td>
           <td>${data.materia_nombre}</td>
           <td>${data.dia_semana}</td>
           <td>${data.hora_inicio}</td>
@@ -159,8 +160,14 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .catch(errors => { // Manejo de errores de validación
       console.error('Errores de validación:', errors);
+
+      if (errors['__all__']) {
+          alert(errors['__all__'][0]);
+      }
+      
+      // Muestra también los errores de campos individuales si los hay
       mostrarErrores(errors);
-    });
+  });
   });
 
   // --- LÓGICA PARA ELIMINAR HORARIO ---

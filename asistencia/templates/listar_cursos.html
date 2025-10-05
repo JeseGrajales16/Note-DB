@@ -107,27 +107,24 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .then(response => response.json())
     .then(data => {
-      if (data.id) { // Si la respuesta tiene un 'id', fue exitoso
-        const newRow = `
-            <tr id="horario-${data.id}">
-            <td>${data.curso_nombre}</td> <td>${data.materia_nombre}</td>
-            <td>${data.dia_semana}</td>
-            <td>${data.hora_inicio}</td>
-            <td>${data.hora_fin}</td>
-            <td class="text-end">
-                <button class="btn btn-danger btn-sm btn-eliminar" data-bs-toggle="modal" data-bs-target="#modalConfirmarEliminacion" data-url="/horario/eliminar/${data.id}/">
-                Eliminar
+      if (data.id) {
+          const newRow = `
+            <tr id="curso-${data.id}">
+              <td>${data.nombre_curso}</td>
+              <td class="text-end">
+                <button class="btn btn-danger btn-sm btn-eliminar" data-bs-toggle="modal" data-bs-target="#modalConfirmarEliminacion" data-url="/cursos/eliminar/${data.id}/">
+                  Eliminar
                 </button>
-            </td>
+              </td>
             </tr>
-        `;
-        // Quitamos el mensaje de "no hay cursos" si existe
-        const noCursosRow = document.getElementById('no-cursos-row');
-        if (noCursosRow) noCursosRow.remove();
+          `;
 
-        tablaCursosBody.insertAdjacentHTML('beforeend', newRow);
-        formRegistro.reset();
-        modalRegistro.hide();
+          const noCursosRow = document.getElementById('no-cursos-row');
+          if (noCursosRow) noCursosRow.remove();
+
+          tablaCursosBody.insertAdjacentHTML('beforeend', newRow);
+          formRegistro.reset();
+          modalRegistro.hide();
       } else {
         // Manejar errores de validación
         console.error('Errores:', data);

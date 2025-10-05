@@ -108,7 +108,7 @@ class Materia(models.Model):
     profesor = models.ForeignKey(Profesor, on_delete=models.CASCADE, related_name='materias_dictadas')
 
     def __str__(self):
-        return self.nombre
+        return f"{self.nombre} ({self.curso.nombre_curso})"
 
 
 class Horario(models.Model):
@@ -128,33 +128,47 @@ class Horario(models.Model):
     def __str__(self):
         return f"{self.materia.nombre} - {self.dia_semana}"
 
-    def save(self, *args, **kwargs):
-        self.full_clean() 
+    def clean(self):
+        super().clean() # Llama a la validación por defecto primero
+        
+        # Si alguno de los campos necesarios no está presente, no podemos validar
+        if not all([self.dia_semana, self.materia, self.hora_inicio, self.hora_fin]):
+            return
+
         profesor = self.materia.profesor
         curso = self.materia.curso
-        dia = self.dia_semana
-        inicio = self.hora_inicio
-        fin = self.hora_fin
 
+        # 1. Verificación de Conflicto de Profesor
         conflicto_profesor = Horario.objects.filter(
-            dia_semana=dia,
+            dia_semana=self.dia_semana,
             materia__profesor=profesor,
-            hora_inicio__lt=fin,
-            hora_fin__gt=inicio
-        ).exclude(pk=self.pk).exists()
+            hora_inicio__lt=self.hora_fin,
+            hora_fin__gt=self.hora_inicio
+        ).exclude(pk=self.pk)
 
-        if conflicto_profesor:
-            raise ValidationError(f'El profesor {profesor} ya tiene una clase asignada en este horario.')
+        if conflicto_profesor.exists():
+            # Obtenemos el horario en conflicto para dar un mensaje más claro
+            conflicto = conflicto_profesor.first()
+            raise ValidationError(
+                f'Conflicto de horario: El profesor {profesor} ya dicta "{conflicto.materia.nombre}" en el curso {conflicto.materia.curso} a esa hora.'
+            )
+
+        # 2. Verificación de Conflicto de Curso
         conflicto_curso = Horario.objects.filter(
-            dia_semana=dia,
+            dia_semana=self.dia_semana,
             materia__curso=curso,
-            hora_inicio__lt=fin,
-            hora_fin__gt=inicio
-        ).exclude(pk=self.pk).exists()
+            hora_inicio__lt=self.hora_fin,
+            hora_fin__gt=self.hora_inicio
+        ).exclude(pk=self.pk)
 
-        if conflicto_curso:
-            raise ValidationError(f'El curso {curso} ya tiene una materia asignada en este horario.')
+        if conflicto_curso.exists():
+            conflicto = conflicto_curso.first()
+            raise ValidationError(
+                f'Conflicto de horario: El curso {curso} ya tiene la materia "{conflicto.materia.nombre}" asignada a esa hora.'
+            )
 
+    def save(self, *args, **kwargs):
+        self.full_clean()
         super().save(*args, **kwargs)
 
 
